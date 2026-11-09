@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 enum PhotoType { dog, landscapes }
 
@@ -12,6 +10,12 @@ class PhotoPage extends StatefulWidget {
 }
 
 class _PhotoPageState extends State<PhotoPage> {
+  final List<String> _localPhotos = [
+    'images/one.jpeg',
+    'images/two.jpg',
+    'images/three.png',
+  ];
+
   String? _photoUrl;
   bool _isLoading = false;
   String? _errorMessage;
@@ -25,20 +29,12 @@ class _PhotoPageState extends State<PhotoPage> {
     });
 
     try {
-      String? photoUrl;
+      // Имитация сетевой задержки
+      await Future.delayed(const Duration(seconds: 2));
 
-      if (_animalType == PhotoType.dog) {
-        final response = await http
-            .get(Uri.parse('https://dog.ceo/api/breeds/image/random'));
-        if (response.statusCode != 200) {
-          throw Exception('HTTP ${response.statusCode}');
-        }
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        photoUrl = data['message'] as String?;
-      } else {
-        final random = DateTime.now().millisecondsSinceEpoch;
-        photoUrl = 'https://picsum.photos/seed/$random/800/800';
-      }
+      final randomIndex =
+          DateTime.now().millisecondsSinceEpoch % _localPhotos.length;
+      final photoUrl = _localPhotos[randomIndex];
 
       setState(() {
         _photoUrl = photoUrl;
@@ -123,7 +119,7 @@ class _PhotoPageState extends State<PhotoPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.network(
+            child: Image.asset(
               _photoUrl!,
               fit: BoxFit.cover,
               width: double.infinity,
@@ -142,7 +138,8 @@ class _PhotoPageState extends State<PhotoPage> {
   }
 
   Widget _buildLoadButton() {
-    final label = _animalType == PhotoType.dog ? '🐶 Новая собака' : '🌄 Новый пейзаж';
+    final label =
+        _animalType == PhotoType.dog ? '🐶 Новая собака' : '🌄 Новый пейзаж';
 
     return ElevatedButton(
       onPressed: _isLoading ? null : _fetchPhoto,
